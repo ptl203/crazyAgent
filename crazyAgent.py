@@ -23,7 +23,8 @@ class CrazyAgent:
             temperature=0.7
         )
         
-        self.tools = [create_google_search_tool()]
+        #self.tools = [create_google_search_tool()]
+        self.tools = []
         self.tools_by_name = {tool.name: tool for tool in self.tools}
         self.llm_with_tools = self.llm.bind_tools(self.tools)
         
