@@ -4,8 +4,9 @@ import gradio as gr
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import HumanMessage, AIMessage
-from typing import TypedDict, List, Union
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+from typing import TypedDict, List, Annotated
+from langgraph.graph.message import add_messages
 from tools import google_search_tool, drone_takeoff_tool, drone_land_tool
 
 
@@ -13,15 +14,18 @@ load_dotenv()
 
 
 class AgentState(TypedDict):
-    messages: List[Union[HumanMessage, AIMessage]]
+    messages: Annotated[List[BaseMessage], add_messages]
 
 
 class CrazyAgent:
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            google_api_key=os.getenv("GOOGLE_API_KEY"),
+            temperature=0.7
+        )
         
-        #self.tools = [google_search_tool, drone_takeoff_tool, drone_land_tool]
-        self.tools = []
+        self.tools = [google_search_tool, drone_takeoff_tool, drone_land_tool]
         self.llm_with_tools = self.llm.bind_tools(self.tools)
         self.tool_node = ToolNode(self.tools)
         
@@ -47,7 +51,7 @@ class CrazyAgent:
     def _call_model(self, state: AgentState):
         messages = state["messages"]
         response = self.llm_with_tools.invoke(messages)
-        return {"messages": messages + [response]}
+        return {"messages": [response]}
     
     def chat(self, message: str, history: List[List[str]]):
         messages = []
