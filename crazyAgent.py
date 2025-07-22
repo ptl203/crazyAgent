@@ -1,4 +1,5 @@
 import os
+import logging
 from dotenv import load_dotenv
 import gradio as gr
 from langgraph.graph import StateGraph, END
@@ -11,6 +12,17 @@ from tools import google_search_tool, drone_takeoff_tool, drone_land_tool
 
 
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('crazyagent.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 
 class AgentState(TypedDict):
@@ -50,10 +62,31 @@ class CrazyAgent:
     
     def _call_model(self, state: AgentState):
         messages = state["messages"]
+        logger.info(f"Calling model with {len(messages)} messages")
+        
+        # Log the last message (user input)
+        if messages:
+            last_msg = messages[-1]
+            logger.info(f"Last message type: {type(last_msg).__name__}, content: {last_msg.content}")
+        
         response = self.llm_with_tools.invoke(messages)
+        
+        # Log if the response contains tool calls
+        if hasattr(response, 'tool_calls') and response.tool_calls:
+            logger.info(f"Model response contains {len(response.tool_calls)} tool calls")
+            for i, tool_call in enumerate(response.tool_calls):
+                logger.info(f"Tool call {i+1}: name='{tool_call['name']}', args={tool_call.get('args', {})}")
+        else:
+            logger.info("Model response contains no tool calls")
+            logger.info(f"Response content: {response.content}")
+        
         return {"messages": [response]}
     
     def chat(self, message: str, history: List[List[str]]):
+        logger.info(f"=== NEW CHAT SESSION ===")
+        logger.info(f"User message: {message}")
+        logger.info(f"History length: {len(history)}")
+        
         messages = []
         
         for human, ai in history:
@@ -62,10 +95,27 @@ class CrazyAgent:
         
         messages.append(HumanMessage(content=message))
         
-        result = self.graph.invoke({"messages": messages})
+        logger.info(f"Invoking graph with {len(messages)} total messages")
         
-        response = result["messages"][-1].content
-        return response
+        try:
+            result = self.graph.invoke({"messages": messages})
+            logger.info(f"Graph execution completed. Result messages: {len(result['messages'])}")
+            
+            # Log all messages in the result
+            for i, msg in enumerate(result["messages"]):
+                logger.info(f"Result message {i+1}: type={type(msg).__name__}")
+                if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                    logger.info(f"  - Contains {len(msg.tool_calls)} tool calls")
+                if hasattr(msg, 'content'):
+                    logger.info(f"  - Content: {msg.content}")
+            
+            response = result["messages"][-1].content
+            logger.info(f"Final response: {response}")
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error during graph execution: {str(e)}", exc_info=True)
+            return f"Error: {str(e)}"
 
 
 def main():
