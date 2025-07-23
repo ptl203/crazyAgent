@@ -5,7 +5,7 @@ import logging
 import rclpy
 import time
 from rclpy.node import Node
-from crazyflie_interfaces.srv import Land, Takeoff
+from crazyflie_interfaces.srv import Land, Takeoff, GoTo
 
 #Load Environment
 from dotenv import load_dotenv
@@ -40,7 +40,7 @@ google_search_tool = Tool(
 
 # Drone control functions
 def drone_takeoff(*args, **kwargs):
-    """Launch/takeoff the Crazyflie drone to 1.0m height"""
+    """Launch/takeoff the Crazyflie drone"""
     tools_logger.info("=== DRONE TAKEOFF TOOL CALLED ===")
     tools_logger.info(f"Args received: {args}")
     tools_logger.info(f"Kwargs received: {kwargs}")
