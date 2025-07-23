@@ -14,9 +14,9 @@ def call_takeoff_service():
         node.get_logger().info('Service not available, waiting...')
     
     request = Takeoff.Request()
-    request.height = 1.0
+    request.height = 0.5
     request.duration = rclpy.duration.Duration(seconds=2.5).to_msg()
-    
+
     future = client.call_async(request)
     rclpy.spin_until_future_complete(node, future)
     
@@ -41,7 +41,7 @@ def call_land_service():
     request = Land.Request()
     request.height = 0.04
     request.duration = rclpy.duration.Duration(seconds=2.5).to_msg()
-    
+
     future = client.call_async(request)
     rclpy.spin_until_future_complete(node, future)
     
