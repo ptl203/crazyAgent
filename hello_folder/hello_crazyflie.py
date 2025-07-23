@@ -14,7 +14,7 @@ def call_takeoff_service():
         node.get_logger().info('Service not available, waiting...')
     
     request = Takeoff.Request()
-    request.height = 1.0
+    request.height = 0.5
     request.duration = rclpy.duration.Duration(seconds=2.5).to_msg()
 
     future = client.call_async(request)

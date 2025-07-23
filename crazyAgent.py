@@ -128,12 +128,12 @@ def main():
         fn=chat_interface,
         title="🤖 Crazy Agent",
         description="An AI agent powered by Gemini Flash 2.5 with Google Search and Crazyflie drone control capabilities",
-        examples=[
-            "What's the latest news about AI?",
-            "Launch the drone",
-            "Land the drone",
-            "Search for information about Python programming"
-        ]
+        #examples=[
+        #    "What's the latest news about AI?",
+        #    "Launch the drone",
+        #    "Land the drone",
+        #    "Search for information about Python programming"
+        #]
     )
     
     interface.launch(share=True)

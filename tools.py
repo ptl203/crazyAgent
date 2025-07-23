@@ -60,7 +60,7 @@ def drone_takeoff(*args, **kwargs):
         
         tools_logger.info("Service available, creating request...")
         request = Takeoff.Request()
-        request.height = 1.0
+        request.height = 0.5
         request.duration = rclpy.duration.Duration(seconds=2.5).to_msg()
 
         tools_logger.info(f"Request created - height: {request.height}, duration: {request.duration}")
