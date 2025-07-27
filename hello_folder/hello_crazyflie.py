@@ -87,9 +87,12 @@ def call_land_service():
     node.destroy_node()
     rclpy.shutdown()
 
+print("calling takeoff")
 call_takeoff_service()
 time.sleep(5)
-call_goto_service([1.0,0.0,0.0], 0)
+print("calling goto")
+call_goto_service([0.0,0.0,0.5], 0)
 time.sleep(5)
+print("calling land")
 call_land_service()
 

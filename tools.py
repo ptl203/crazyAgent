@@ -5,6 +5,7 @@ import logging
 import rclpy
 import time
 from rclpy.node import Node
+from geometry_msgs.msg import Point
 from crazyflie_interfaces.srv import Land, Takeoff, GoTo
 
 #Load Environment
@@ -28,19 +29,9 @@ if not tools_logger.handlers:
     file_handler.setFormatter(formatter)
     tools_logger.addHandler(file_handler)
 
-# Initialize Google Search API Wrapper
-search = GoogleSearchAPIWrapper()
-
-# Create Google Search Tool
-google_search_tool = Tool(
-    name="google_search",
-    description="Search Google for information on a specific topic or query. Useful for finding current information, news, facts, or general knowledge.",
-    func=search.run
-)
-
 # Drone control functions
 def drone_takeoff(*args, **kwargs):
-    """Launch/takeoff the Crazyflie drone"""
+    """Launch/takeoff the Crazyflie drone safely"""
     tools_logger.info("=== DRONE TAKEOFF TOOL CALLED ===")
     tools_logger.info(f"Args received: {args}")
     tools_logger.info(f"Kwargs received: {kwargs}")
@@ -73,7 +64,7 @@ def drone_takeoff(*args, **kwargs):
         if future.result() is not None:
             tools_logger.info(f"Takeoff service result: {future.result()}")
             node.get_logger().info('Takeoff service called successfully')
-            result = "Drone takeoff successful - drone launched to 1.0m height"
+            result = "Drone takeoff successful - drone launched to 0.5m height"
         else:
             tools_logger.error("Takeoff service returned None result")
             node.get_logger().error('Failed to call takeoff service')
@@ -142,6 +133,7 @@ def drone_land(*args, **kwargs):
         error_msg = f"Error during drone landing: {str(e)}"
         tools_logger.error(error_msg, exc_info=True)
         return error_msg
+    
 
 # Create Drone Control Tools
 drone_takeoff_tool = Tool(
