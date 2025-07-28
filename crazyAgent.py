@@ -8,8 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from typing import TypedDict, List, Annotated
 from langgraph.graph.message import add_messages
-from tools import google_search_tool, drone_takeoff_tool, drone_land_tool
-
+from tools import drone_takeoff_tool, drone_land_tool, drone_goto_tool
 
 load_dotenv()
 
@@ -37,7 +36,7 @@ class CrazyAgent:
             temperature=0.7
         )
         
-        self.tools = [google_search_tool, drone_takeoff_tool, drone_land_tool]
+        self.tools = [drone_takeoff_tool, drone_land_tool, drone_goto_tool]
         self.llm_with_tools = self.llm.bind_tools(self.tools)
         self.tool_node = ToolNode(self.tools)
         
@@ -75,7 +74,12 @@ class CrazyAgent:
         if hasattr(response, 'tool_calls') and response.tool_calls:
             logger.info(f"Model response contains {len(response.tool_calls)} tool calls")
             for i, tool_call in enumerate(response.tool_calls):
-                logger.info(f"Tool call {i+1}: name='{tool_call['name']}', args={tool_call.get('args', {})}")
+                logger.info(f"Tool call {i+1}: name='{tool_call['name']}'")
+                args = tool_call.get('args', {})
+                logger.info(f"  Raw args dict: {args}")
+                logger.info(f"  Args type: {type(args).__name__}")
+                for key, value in args.items():
+                    logger.info(f"    {key}: {repr(value)} (type: {type(value).__name__})")
         else:
             logger.info("Model response contains no tool calls")
             logger.info(f"Response content: {response.content}")
