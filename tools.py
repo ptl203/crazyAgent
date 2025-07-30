@@ -223,12 +223,25 @@ def drone_goto(objective: str):
         tools_logger.error(error_msg, exc_info=True)
         return error_msg
 
-def drone_turn(turn_angle: float):
+def drone_turn(*args, **kwargs):
     """Turn the Crazyflie drone by a specified angle in degrees"""
     tools_logger.info("=== DRONE TURN TOOL CALLED ===")
-    tools_logger.info(f"Turn angle received: {turn_angle} degrees")
+    tools_logger.info(f"Args received: {args}")
+    tools_logger.info(f"Kwargs received: {kwargs}")
     
     try:
+        # Extract turn_angle from args or kwargs
+        if args:
+            turn_angle_str = args[0]
+        elif 'turn_angle' in kwargs:
+            turn_angle_str = kwargs['turn_angle']
+        else:
+            raise ValueError("No turn_angle parameter provided")
+        
+        # Convert string to float
+        turn_angle = float(turn_angle_str)
+        tools_logger.info(f"Turn angle converted to: {turn_angle} degrees")
+        
         # Convert degrees to radians
         yaw_radians = math.radians(turn_angle)
         
