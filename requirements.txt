@@ -1,0 +1,17 @@
+# Core dependencies for crazyAgent
+gradio
+python-dotenv
+langchain
+langchain-google-genai
+langchain-google-community
+langgraph
+
+# ROS2 dependencies (may need to be installed separately depending on system)
+# rclpy - typically installed with ROS2
+# geometry_msgs - typically installed with ROS2
+# crazyflie_interfaces - custom Crazyflie ROS2 interfaces
+
+# Note: ROS2 packages (rclpy, geometry_msgs, crazyflie_interfaces) are typically
+# installed through the ROS2 ecosystem rather than pip. Make sure you have:
+# 1. ROS2 installed on your system
+# 2. Crazyflie ROS2 packages built and sourced
