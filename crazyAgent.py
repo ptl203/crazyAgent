@@ -8,7 +8,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from typing import TypedDict, List, Annotated
 from langgraph.graph.message import add_messages
-from tools import drone_takeoff_tool, drone_land_tool, drone_goto_tool
+from tools import drone_takeoff_tool, drone_land_tool, drone_goto_tool, drone_turn_tool
 
 load_dotenv()
 
@@ -36,7 +36,7 @@ class CrazyAgent:
             temperature=0.7
         )
         
-        self.tools = [drone_takeoff_tool, drone_land_tool, drone_goto_tool]
+        self.tools = [drone_takeoff_tool, drone_land_tool, drone_goto_tool, drone_turn_tool]
         self.llm_with_tools = self.llm.bind_tools(self.tools)
         self.tool_node = ToolNode(self.tools)
         

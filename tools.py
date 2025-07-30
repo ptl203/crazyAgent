@@ -2,6 +2,7 @@ from langchain_google_community import GoogleSearchAPIWrapper
 from langchain.tools import Tool
 import os
 import logging
+import math
 import rclpy
 import time
 from rclpy.node import Node
@@ -222,6 +223,77 @@ def drone_goto(objective: str):
         tools_logger.error(error_msg, exc_info=True)
         return error_msg
 
+def drone_turn(*args, **kwargs):
+    """Turn the Crazyflie drone by a specified angle in degrees"""
+    tools_logger.info("=== DRONE TURN TOOL CALLED ===")
+    tools_logger.info(f"Args received: {args}")
+    tools_logger.info(f"Kwargs received: {kwargs}")
+    
+    try:
+        # Extract turn_angle from args or kwargs
+        if args:
+            turn_angle_str = args[0]
+        elif 'turn_angle' in kwargs:
+            turn_angle_str = kwargs['turn_angle']
+        else:
+            raise ValueError("No turn_angle parameter provided")
+        
+        # Convert string to float
+        turn_angle = float(turn_angle_str)
+        tools_logger.info(f"Turn angle converted to: {turn_angle} degrees")
+        
+        # Convert degrees to radians
+        yaw_radians = math.radians(turn_angle)
+        
+        tools_logger.info(f"Turn angle in radians: {yaw_radians}")
+        
+        tools_logger.info("Initializing ROS2...")
+        rclpy.init()
+        node = Node('turn_client')
+        
+        tools_logger.info("Creating GoTo service client...")
+        client = node.create_client(GoTo, '/cf231/go_to')
+        
+        tools_logger.info("Waiting for GoTo service...")
+        while not client.wait_for_service(timeout_sec=1.0):
+            tools_logger.warning('GoTo service not available, waiting...')
+            node.get_logger().info('Service not available, waiting...')
+        
+        tools_logger.info("Service available, creating request...")
+        request = GoTo.Request()
+        request.relative = True
+        request.goal = arrayToGeometryPoint([0.0, 0.0, 0.0])
+        request.yaw = float(yaw_radians)
+        request.duration = rclpy.duration.Duration(seconds=2.5).to_msg()
+
+        tools_logger.info(f"Request created - goal: {request.goal}, yaw: {request.yaw}, relative: {request.relative}")
+        
+        tools_logger.info("Calling GoTo service asynchronously...")
+        future = client.call_async(request)
+        rclpy.spin_until_future_complete(node, future)
+        
+        tools_logger.info("Service call completed, checking result...")
+        if future.result() is not None:
+            tools_logger.info(f"GoTo service result: {future.result()}")
+            node.get_logger().info('GoTo service called successfully')
+            result = f"Drone turned {turn_angle} degrees successfully"
+        else:
+            tools_logger.error("GoTo service returned None result")
+            node.get_logger().error('Failed to call GoTo service')
+            result = f"Failed to turn drone {turn_angle} degrees - GoTo service error"
+        
+        tools_logger.info("Cleaning up ROS2 resources...")
+        node.destroy_node()
+        rclpy.shutdown()
+        
+        tools_logger.info(f"Turn tool returning: {result}")
+        return result
+        
+    except Exception as e:
+        error_msg = f"Error during drone turn operation: {str(e)}"
+        tools_logger.error(error_msg, exc_info=True)
+        return error_msg
+
 # Create Drone Control Tools
 drone_takeoff_tool = Tool(
     name="drone_takeoff",
@@ -239,4 +311,10 @@ drone_goto_tool = Tool(
     name="drone_goto",
     description="Move the Crazyflie drone to a specified objective location. Takes an 'Objective' parameter (A, B, C, or D) corresponding to corners of a 0.5x0.5 square at 1.0m height. Use this tool when asked to move, go to, or navigate to a specific position.",
     func=drone_goto
+)
+
+drone_turn_tool = Tool(
+    name="drone_turn",
+    description="Turn the Crazyflie drone by a specified angle in degrees. Takes a 'turn_angle' parameter in degrees (positive for clockwise, negative for counter-clockwise). Use this tool when asked to turn, rotate, or change the drone's orientation.",
+    func=drone_turn
 )
