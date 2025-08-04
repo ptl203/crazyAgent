@@ -143,35 +143,22 @@ def arrayToGeometryPoint(a):
     result.z = a[2]
     return result
 
-def objective_to_coordinates(objective):
-    """Convert string objective to coordinate array [x, y, z]"""
-    tools_logger.info(f"Converting objective '{objective}' to coordinates")
-    
-    coordinate_map = {
-        "A": [0.25, 0.25, 1.0],
-        "B": [0.25, -0.25, 1.0],
-        "C": [-0.25, -0.25, 1.0],
-        "D": [-0.25, 0.25, 1.0]
-    }
-    
-    objective_upper = objective.upper().strip()
-    
-    if objective_upper in coordinate_map:
-        coordinates = coordinate_map[objective_upper]
-        tools_logger.info(f"Mapped '{objective}' to coordinates: {coordinates}")
-        return coordinates
-    else:
-        tools_logger.warning(f"Unknown objective '{objective}', defaulting to point A")
-        return [0.25, 0.25, 1.0]
 
-def drone_goto(objective: str):
-    """Move the Crazyflie drone to a specified objective location"""
+def drone_goto(coordinates: str):
+    """Move the Crazyflie drone to specified coordinates"""
     tools_logger.info("=== DRONE GOTO TOOL CALLED ===")
-    tools_logger.info(f"Objective received: {objective}")
+    tools_logger.info(f"Coordinates received: {coordinates}")
     
     try:
-        # Convert objective to coordinates
-        goal_coordinates = objective_to_coordinates(objective)
+        # Parse coordinates string to list
+        if isinstance(coordinates, str):
+            # Remove brackets and split by comma
+            coords_str = coordinates.strip('[]')
+            goal_coordinates = [float(x.strip()) for x in coords_str.split(',')]
+        else:
+            goal_coordinates = coordinates
+        
+        tools_logger.info(f"Parsed coordinates: {goal_coordinates}")
         yaw = 0.0  # Default yaw angle
         
         tools_logger.info(f"Goal coordinates: {goal_coordinates}, yaw: {yaw}")
@@ -205,11 +192,11 @@ def drone_goto(objective: str):
         if future.result() is not None:
             tools_logger.info(f"GoTo service result: {future.result()}")
             node.get_logger().info('GoTo service called successfully')
-            result = f"Drone moved to {objective} successfully - coordinates: {goal_coordinates}"
+            result = f"Drone moved to coordinates {goal_coordinates} successfully"
         else:
             tools_logger.error("GoTo service returned None result")
             node.get_logger().error('Failed to call GoTo service')
-            result = f"Failed to move drone to {objective} - GoTo service error"
+            result = f"Failed to move drone to coordinates {goal_coordinates} - GoTo service error"
         
         tools_logger.info("Cleaning up ROS2 resources...")
         node.destroy_node()
@@ -309,7 +296,7 @@ drone_land_tool = Tool(
 
 drone_goto_tool = Tool(
     name="drone_goto",
-    description="Move the Crazyflie drone to a specified objective location. Takes an 'Objective' parameter (A, B, C, or D) corresponding to corners of a 0.5x0.5 square at 1.0m height. Use this tool when asked to move, go to, or navigate to a specific position.",
+    description="Move the Crazyflie drone to specified coordinates. Takes a 'coordinates' parameter as a string in format '[x, y, z]' (e.g., '[0.25, 0.25, 1.0]'). Use this tool after first calling get_objective_coordinates to convert objective names to coordinates. Use this tool when asked to move, go to, or navigate to a specific position.",
     func=drone_goto
 )
 
