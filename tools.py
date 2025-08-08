@@ -32,7 +32,7 @@ if not tools_logger.handlers:
 
 # Drone control functions
 def drone_takeoff(*args, **kwargs):
-    """Launch/takeoff the Crazyflie drone safely"""
+    """Launch/Takeoff the Crazyflie drone safely"""
     tools_logger.info("=== DRONE TAKEOFF TOOL CALLED ===")
     tools_logger.info(f"Args received: {args}")
     tools_logger.info(f"Kwargs received: {kwargs}")
